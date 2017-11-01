@@ -9,6 +9,7 @@ import android.support.annotation.IntRange;
 import android.view.Display;
 import android.view.OrientationEventListener;
 import android.view.WindowManager;
+import android.util.Log;
 
 import com.facebook.react.uimanager.SimpleViewManager;
 import com.facebook.react.uimanager.ThemedReactContext;
@@ -105,11 +106,23 @@ public class CameraViewManager extends SimpleViewManager<CameraView> {
             updateCameraSize();
             cameraReleased.set(false);
             setCameraRotation(currentRotation, true);
+
+            // focus
+            Camera.Parameters parameters = camera.getParameters();
+
+            List<String> focusModes = parameters.getSupportedFocusModes();
+            if (focusModes.contains(Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE)) {
+                parameters.setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE);
+            } else if (focusModes.contains(Camera.Parameters.FOCUS_MODE_AUTO)) {
+                parameters.setFocusMode(Camera.Parameters.FOCUS_MODE_AUTO);
+            }
+
+            camera.setParameters(parameters);
         } catch (RuntimeException e) {
             e.printStackTrace();
         }
     }
-
+    
     private static void releaseCamera() {
         cameraReleased.set(true);
         camera.release();
@@ -187,30 +200,27 @@ public class CameraViewManager extends SimpleViewManager<CameraView> {
         return info;
     }
 
-    private static Camera.Size getOptimalPreviewSize(List<Camera.Size> sizes, int w, int h) {
-        final double ASPECT_TOLERANCE = 0.1;
-        double targetRatio=(double)h / w;
-        if (sizes == null) return null;
-        Camera.Size optimalSize = null;
-        double minDiff = Double.MAX_VALUE;
+    private static Camera.Size getOptimalPreviewSize(List<Camera.Size> sizes, int maxWidth, int maxHeight) {
+        Camera.Size bestSize = null;
         for (Camera.Size size : sizes) {
-            double ratio = (double) size.width / size.height;
-            if (Math.abs(ratio - targetRatio) > ASPECT_TOLERANCE) continue;
-            if (Math.abs(size.height - h) < minDiff) {
-                optimalSize = size;
-                minDiff = Math.abs(size.height - h);
+            if (size.width > maxWidth || size.height > maxHeight) {
+                continue;
+            }
+
+            if (bestSize == null) {
+                bestSize = size;
+                continue;
+            }
+
+            int resultArea = bestSize.width * bestSize.height;
+            int newArea = size.width * size.height;
+
+            if (newArea > resultArea) {
+                bestSize = size;
             }
         }
-        if (optimalSize == null) {
-            minDiff = Double.MAX_VALUE;
-            for (Camera.Size size : sizes) {
-                if (Math.abs(size.height - h) < minDiff) {
-                    optimalSize = size;
-                    minDiff = Math.abs(size.height - h);
-                }
-            }
-        }
-        return optimalSize;
+
+        return bestSize;
     }
 
     private static void updateCameraSize() {
@@ -225,7 +235,7 @@ public class CameraViewManager extends SimpleViewManager<CameraView> {
             if (camera == null) return;
             List<Camera.Size> supportedPreviewSizes = camera.getParameters().getSupportedPreviewSizes();
             List<Camera.Size> supportedPictureSizes = camera.getParameters().getSupportedPictureSizes();
-            Camera.Size optimalSize = getOptimalPreviewSize(supportedPreviewSizes, size.x, size.y);
+            Camera.Size optimalSize = getOptimalPreviewSize(supportedPreviewSizes, 1920, 1080);
             Camera.Size optimalPictureSize = getOptimalPreviewSize(supportedPictureSizes, size.x, size.y);
             Camera.Parameters parameters = camera.getParameters();
             parameters.setPreviewSize(optimalSize.width, optimalSize.height);

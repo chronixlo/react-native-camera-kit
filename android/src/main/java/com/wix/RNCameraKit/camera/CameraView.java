@@ -6,6 +6,7 @@ import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
 import android.widget.FrameLayout;
+import android.util.Log;
 
 import com.facebook.react.uimanager.ThemedReactContext;
 import com.wix.RNCameraKit.Utils;
@@ -25,22 +26,8 @@ public class CameraView extends FrameLayout implements SurfaceHolder.Callback {
         setBackgroundColor(Color.BLACK);
         addView(surface, MATCH_PARENT, MATCH_PARENT);
         surface.getHolder().addCallback(this);
-        surface.setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (CameraViewManager.getCamera() != null) {
-                    try {
-                        CameraViewManager.getCamera().autoFocus(new Camera.AutoFocusCallback() {
-                            @Override
-                            public void onAutoFocus(boolean success, Camera camera) {
-                            }
-                        });
-                    } catch (Exception e) {
-
-                    }
-                }
-            }
-        });
+        
+        // autofocus over tap-to-focus
     }
 
     @Override
@@ -49,6 +36,10 @@ public class CameraView extends FrameLayout implements SurfaceHolder.Callback {
         int actualPreviewHeight = getResources().getDisplayMetrics().heightPixels;
         int height = Utils.convertDeviceHeightToSupportedAspectRatio(actualPreviewWidth, actualPreviewHeight);
         surface.layout(0, 0, actualPreviewWidth, height);
+
+        Log.w("kyrpae", ""+actualPreviewWidth);
+        Log.w("kyrpae", ""+actualPreviewHeight);
+        Log.w("kyrpae", ""+height);
     }
 
     @Override
