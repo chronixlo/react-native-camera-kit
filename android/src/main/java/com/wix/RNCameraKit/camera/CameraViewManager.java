@@ -9,7 +9,6 @@ import android.support.annotation.IntRange;
 import android.view.Display;
 import android.view.OrientationEventListener;
 import android.view.WindowManager;
-import android.util.Log;
 
 import com.facebook.react.uimanager.SimpleViewManager;
 import com.facebook.react.uimanager.ThemedReactContext;
