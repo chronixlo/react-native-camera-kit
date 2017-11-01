@@ -199,6 +199,11 @@ public class CameraViewManager extends SimpleViewManager<CameraView> {
     private static Camera.Size getOptimalPreviewSize(List<Camera.Size> sizes, int maxWidth, int maxHeight) {
         Camera.Size bestSize = null;
         for (Camera.Size size : sizes) {
+            if (size.width == maxWidth && size.height == maxHeight) {
+                bestSize = size;
+                break;
+            }
+
             if (size.width > maxWidth || size.height > maxHeight) {
                 continue;
             }
@@ -226,13 +231,14 @@ public class CameraViewManager extends SimpleViewManager<CameraView> {
             WindowManager wm = (WindowManager) reactContext.getSystemService(Context.WINDOW_SERVICE);
             Display display = wm.getDefaultDisplay();
             Point size = new Point();
-            display.getSize(size);
+            display.getRealSize(size);
             size.y = Utils.convertDeviceHeightToSupportedAspectRatio(size.x, size.y);
             if (camera == null) return;
             List<Camera.Size> supportedPreviewSizes = camera.getParameters().getSupportedPreviewSizes();
             List<Camera.Size> supportedPictureSizes = camera.getParameters().getSupportedPictureSizes();
-            Camera.Size optimalSize = getOptimalPreviewSize(supportedPreviewSizes, 1920, 1080);
-            Camera.Size optimalPictureSize = getOptimalPreviewSize(supportedPictureSizes, size.x, size.y);
+            // swap x&y cuz portrait
+            Camera.Size optimalSize = getOptimalPreviewSize(supportedPreviewSizes, size.y, size.x);
+            Camera.Size optimalPictureSize = getOptimalPreviewSize(supportedPictureSizes, 1920, 1080);
             Camera.Parameters parameters = camera.getParameters();
             parameters.setPreviewSize(optimalSize.width, optimalSize.height);
             parameters.setPictureSize(optimalPictureSize.width, optimalPictureSize.height);
