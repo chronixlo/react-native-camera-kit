@@ -52,7 +52,7 @@ public class CameraViewManager extends SimpleViewManager<CameraView> {
         if(!cameraViews.isEmpty() && cameraViews.peek() == cameraView) return;
         CameraViewManager.cameraViews.push(cameraView);
         connectHolder();
-        createOrientationListener();
+        // createOrientationListener();
     }
 
     private static void createOrientationListener() {
@@ -104,19 +104,7 @@ public class CameraViewManager extends SimpleViewManager<CameraView> {
             camera = Camera.open(currentCamera);
             updateCameraSize();
             cameraReleased.set(false);
-            setCameraRotation(currentRotation, true);
-
-            // focus
-            Camera.Parameters parameters = camera.getParameters();
-
-            List<String> focusModes = parameters.getSupportedFocusModes();
-            if (focusModes.contains(Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE)) {
-                parameters.setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE);
-            } else if (focusModes.contains(Camera.Parameters.FOCUS_MODE_AUTO)) {
-                parameters.setFocusMode(Camera.Parameters.FOCUS_MODE_AUTO);
-            }
-
-            camera.setParameters(parameters);
+            setCameraRotation(0, true);
         } catch (RuntimeException e) {
             e.printStackTrace();
         }
@@ -190,6 +178,15 @@ public class CameraViewManager extends SimpleViewManager<CameraView> {
         parameters.setRotation(supportedRotation);
         parameters.setPictureFormat(PixelFormat.JPEG);
         camera.setDisplayOrientation(Orientation.getDeviceOrientation(reactContext.getCurrentActivity()));
+        
+        // focus
+        List<String> focusModes = parameters.getSupportedFocusModes();
+        if (focusModes.contains(Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE)) {
+            parameters.setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE);
+        } else if (focusModes.contains(Camera.Parameters.FOCUS_MODE_AUTO)) {
+            parameters.setFocusMode(Camera.Parameters.FOCUS_MODE_AUTO);
+        }
+
         camera.setParameters(parameters);
     }
 
