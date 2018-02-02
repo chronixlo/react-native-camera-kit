@@ -52,19 +52,6 @@ public class CameraViewManager extends SimpleViewManager<CameraView> {
         if(!cameraViews.isEmpty() && cameraViews.peek() == cameraView) return;
         CameraViewManager.cameraViews.push(cameraView);
         connectHolder();
-        // createOrientationListener();
-    }
-
-    private static void createOrientationListener() {
-        if (orientationListener != null) return;
-        orientationListener = new OrientationEventListener(reactContext, SensorManager.SENSOR_DELAY_NORMAL) {
-             @Override
-             public void onOrientationChanged(@IntRange(from = -1, to = 359) int angle) {
-                 if (angle == OrientationEventListener.ORIENTATION_UNKNOWN) return;
-                 setCameraRotation(359 - angle, false);
-             }
-         };
-         orientationListener.enable();
     }
 
     static boolean setFlashMode(String mode) {
@@ -104,7 +91,7 @@ public class CameraViewManager extends SimpleViewManager<CameraView> {
             camera = Camera.open(currentCamera);
             updateCameraSize();
             cameraReleased.set(false);
-            setCameraRotation(0, true);
+            setCameraProps();
         } catch (RuntimeException e) {
             e.printStackTrace();
         }
@@ -167,17 +154,16 @@ public class CameraViewManager extends SimpleViewManager<CameraView> {
         }
     }
 
-    private static void setCameraRotation(int rotation, boolean force) {
+    private static void setCameraProps() {
         if (camera == null) return;
-        int supportedRotation = getSupportedRotation(rotation);
-        if (supportedRotation == currentRotation && !force) return;
-        currentRotation = supportedRotation;
-
         if (cameraReleased.get()) return;
+
+        int deviceOrientation = Orientation.getDeviceOrientation(reactContext.getCurrentActivity());
+
         Camera.Parameters parameters = camera.getParameters();
-        parameters.setRotation(supportedRotation);
+        parameters.setRotation(deviceOrientation);
         parameters.setPictureFormat(PixelFormat.JPEG);
-        camera.setDisplayOrientation(Orientation.getDeviceOrientation(reactContext.getCurrentActivity()));
+        camera.setDisplayOrientation(deviceOrientation);
         
         // focus
         List<String> focusModes = parameters.getSupportedFocusModes();
